@@ -32,6 +32,30 @@ modules:
       buildpack: nodejs_buildpack
     requires:
       - name: risk-management-db
+      - name: risk-management-xsuaa
+  - name: risk-management-approuter
+    type: nodejs
+    path: approuter
+    requires:
+      - name: risk-management-xsuaa
+      - name: srv-api
+        group: destinations
+        properties:
+          forwardAuthToken: true
+          strictSSL: true
+          name: srv-binding
+          url: '~{srv-url}'
+    build-parameters:
+      requires:
+        - name: risk-management-app
+          artifacts:
+          - './*'
+          target-path: resources
+  - name: risk-management-app
+    type: html5
+    path: app
+    build-parameters:
+      supported-platforms: []
 resources:
   - name: risk-management-db
     type: com.sap.xs.hdi-container
@@ -39,11 +63,22 @@ resources:
       service: hana
       service-plan: hdi-shared
   - name: risk-management-xsuaa
-    type: com.sap.xs.uaa
+    type: org.cloudfoundry.managed-service
     parameters:
       service: xsuaa
       service-plan: application
       path: ./xs-security.json
+      config:
+        xsappname: 'risk-management-${space}'
+        role-collections:
+          - name: 'RiskManager-${space}'
+            description: Manage Risks
+            role-template-references:
+              - $XSAPPNAME.RiskManager
+          - name: 'RiskViewer-${space}'
+            description: View Risks
+            role-template-references:
+              - $XSAPPNAME.RiskViewer
   - name: risk-management-destination-service
     type: org.cloudfoundry.managed-service
     parameters:

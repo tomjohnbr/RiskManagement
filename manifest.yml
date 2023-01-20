@@ -29,3 +29,4 @@ applications:
   buildpack: nodejs_buildpack
   services:
   - risk-management-db
+  - risk-management-xsuaa
